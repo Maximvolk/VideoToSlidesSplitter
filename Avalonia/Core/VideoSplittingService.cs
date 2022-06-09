@@ -15,8 +15,7 @@ namespace Core
         public async Task<string> OpenFileAsync(string fileName)
         {
             await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
-            await Task.Run(() => SplitVideoToSlides(fileName));
-            
+
             return "/Users/maximvolk/Downloads/img.png";
         }
 
