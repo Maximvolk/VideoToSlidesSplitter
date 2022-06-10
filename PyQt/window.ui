@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>606</height>
+    <height>598</height>
    </rect>
   </property>
   <property name="font">
@@ -31,8 +31,8 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>380</y>
-      <width>491</width>
+      <y>390</y>
+      <width>511</width>
       <height>23</height>
      </rect>
     </property>
@@ -125,19 +125,6 @@ QPushButton:pressed {
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>410</y>
-      <width>41</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>0 %</string>
-    </property>
    </widget>
    <widget class="QPushButton" name="addVideoButton">
     <property name="geometry">
@@ -250,7 +237,7 @@ QPushButton:pressed {
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

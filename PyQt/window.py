@@ -16,14 +16,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_file_dialog(self):
         video_path = QtWidgets.QFileDialog.getOpenFileName(self,
             'Open file',  '/Users/maximvolk/Source/VideoToSlidesSplitter',"Video files (*.mp4)")
-        preview_path = get_video_frame(video_path[0])
-        
-        # set preview image to graphics view
-        # scene = QtWidgets.QGraphicsScene(self)
-        # item = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap(preview_path))
-        # scene.addItem(item)
 
-        # self.previewArea.fitInView(scene.sceneRect())
+        if not video_path[0]:
+            return
+
+        preview_path = get_video_frame(video_path[0])
         self.previewArea.setScaledContents(True)
         self.previewArea.setPixmap(QtGui.QPixmap(preview_path))
 
