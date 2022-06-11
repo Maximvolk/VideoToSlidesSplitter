@@ -11,6 +11,12 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi("window.ui", self)
         self.setHandlers()
 
+        self.videoPath = None
+        self.outputDirectory = None
+
+        self.removeVideoButton.setEnabled(False)
+        self.startButton.setEnabled(False)
+
         self.previewScene = PreviewScene()
         self.preview.setScene(self.previewScene)
 
@@ -26,14 +32,22 @@ class MainWindow(QtWidgets.QMainWindow):
         if not videoPath[0]:
             return
         
+        self.videoPath = videoPath[0]
         self.addVideoButton.setEnabled(False)
-        self.previewScene.addVideo(videoPath[0])
+        self.removeVideoButton.setEnabled(True)
+        self.startButton.setEnabled(True)
+
+        self.previewScene.createPreviewFromVideo(videoPath[0])
         self.preview.fitInView(self.previewScene.itemsBoundingRect(),
             QtCore.Qt.AspectRatioMode.KeepAspectRatio)
     
     def removeVideo(self):
-        self.previewScene.removeVideo()
+        self.removeVideoButton.setEnabled(False)
+        self.startButton.setEnabled(False)
         self.addVideoButton.setEnabled(True)
+        
+        self.videoPath = None
+        self.previewScene.clear()
 
     def openChooseOutputDirectoryDialog(self):
         outputDirectory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
@@ -41,7 +55,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not outputDirectory:
             return
 
-        self.previewScene.outputDirectory = outputDirectory
+        print(outputDirectory)
+        self.outputDirectory = outputDirectory
 
 
 app = QtWidgets.QApplication(sys.argv)

@@ -6,25 +6,18 @@ class PreviewScene(QtWidgets.QGraphicsScene):
 
     def __init__(self):
         super().__init__()
-        self.videoPath = None
-        self.previewPath = None
-        self.outputDirectory = None
 
         self.mouseLeftButtonPressed = False
         self.mouseStartPosition = None
         self.selectionArea = None
 
-    def addVideo(self, video_path):
-        self.videoPath = video_path
-        self.previewPath = getVideoFrame(video_path)
-        self.addPixmap(QtGui.QPixmap(self.previewPath))
+    def createPreviewFromVideo(self, videoPath):
+        previewPath = getVideoFrame(videoPath)
+        self.addPixmap(QtGui.QPixmap(previewPath))
 
-    def removeVideo(self):
-        self.videoPath = None
-        self.previewPath = None
-
-        for item in self.items():
-            self.removeItem(item) 
+    # def clearScene(self):
+    #     for item in self.items():
+    #         self.removeItem(item) 
 
     def mousePressEvent(self, event) -> None:
         if event.button() == QtCore.Qt.LeftButton:
