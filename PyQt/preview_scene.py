@@ -9,29 +9,85 @@ class PreviewScene(QtWidgets.QGraphicsScene):
 
         self.mouseLeftButtonPressed = False
         self.mouseStartPosition = None
-        self.selectionArea = None
+        # self.selectionRect = None
+
+        self.maxWidth = int(self.width())
+        self.maxHeight = int(self.height())
+        self.resetSelection()
 
     def createPreviewFromVideo(self, videoPath):
         previewPath = getVideoFrame(videoPath)
         self.addPixmap(QtGui.QPixmap(previewPath))
 
-    # def clearScene(self):
-    #     for item in self.items():
-    #         self.removeItem(item) 
+        self.maxWidth = int(self.width())
+        self.maxHeight = int(self.height())
+        self.resetSelection()
+
+    @property
+    def x0(self):
+        return self._x0
+
+    @x0.setter
+    def x0(self, value):
+        if value < 0:
+            self._x0 = 0
+        else:
+            self._x0 = value
+
+    @property
+    def y0(self):
+        return self._y0
+
+    @y0.setter
+    def y0(self, value):
+        if value < 0:
+            self._y0 = 0
+        else:
+            self._y0 = value
+
+    @property
+    def w(self):
+        return self._w
+
+    @w.setter
+    def w(self, value):
+        if self.x0 + value > self.maxWidth:
+            self._w = self.maxWidth - self.x0
+        else:
+            self._w = value
+
+    @property
+    def h(self):
+        return self._h
+
+    @h.setter
+    def h(self, value):
+        if self.y0 + value > self.maxHeight:
+            self._h = self.maxHeight - self.y0
+        else:
+            self._h = value
+
+    def resetSelection(self):
+        self.selectionRect = None
+        self.x0 = 0
+        self.y0 = 0
+        self.w = self.maxWidth
+        self.h = self.maxHeight
 
     def mousePressEvent(self, event) -> None:
         if event.button() == QtCore.Qt.LeftButton:
             # clear existing selection area
-            if self.selectionArea:
-                self.removeItem(self.selectionArea)
+            if self.selectionRect:
+                self.removeItem(self.selectionRect)
+                self.resetSelection()
 
             self.mouseLeftButtonPressed = True
             self.mouseStartPosition = event.scenePos()
 
-            self.selectionArea = QtWidgets.QGraphicsRectItem()
-            self.selectionArea.setBrush(QtGui.QBrush(QtGui.QColor(158, 182, 255, 96)))
-            self.selectionArea.setPen(QtGui.QPen(QtGui.QColor(158, 182, 255, 200), 1))
-            self.addItem(self.selectionArea)
+            self.selectionRect = QtWidgets.QGraphicsRectItem()
+            self.selectionRect.setBrush(QtGui.QBrush(QtGui.QColor(158, 182, 255, 96)))
+            self.selectionRect.setPen(QtGui.QPen(QtGui.QColor(158, 182, 255, 200), 1))
+            self.addItem(self.selectionRect)
 
         super().mousePressEvent(event)
 
@@ -45,28 +101,28 @@ class PreviewScene(QtWidgets.QGraphicsScene):
         
         if scene_pos.x() > self.mouseStartPosition.x():
             if scene_pos.y() > self.mouseStartPosition.y():
-                x0 = self.mouseStartPosition.x()
-                y0 = self.mouseStartPosition.y()
-                width = scene_pos.x() - x0
-                height = scene_pos.y() - y0
+                self.x0 = self.mouseStartPosition.x()
+                self.y0 = self.mouseStartPosition.y()
+                self.w = scene_pos.x() - self.x0
+                self.h = scene_pos.y() - self.y0
             else:
-                x0 = self.mouseStartPosition.x()
-                y0 = scene_pos.y()
-                width = scene_pos.x() - x0
-                height = self.mouseStartPosition.y() - y0
+                self.x0 = self.mouseStartPosition.x()
+                self.y0 = scene_pos.y()
+                self.w = scene_pos.x() - self.x0
+                self.h = self.mouseStartPosition.y() - self.y0
         else:
             if scene_pos.y() > self.mouseStartPosition.y():
-                x0 = scene_pos.x()
-                y0 = self.mouseStartPosition.y()
-                width = self.mouseStartPosition.x() - x0
-                height = scene_pos.y() - y0
+                self.x0 = scene_pos.x()
+                self.y0 = self.mouseStartPosition.y()
+                self.w = self.mouseStartPosition.x() - self.x0
+                self.h = scene_pos.y() - self.y0
             else:
-                x0 = scene_pos.x()
-                y0 = scene_pos.y()
-                width = self.mouseStartPosition.x() - x0
-                height = self.mouseStartPosition.y() - y0
+                self.x0 = scene_pos.x()
+                self.y0 = scene_pos.y()
+                self.w = self.mouseStartPosition.x() - self.x0
+                self.h = self.mouseStartPosition.y() - self.y0
 
-        self.selectionArea.setRect(x0, y0, width, height)
+        self.selectionRect.setRect(self.x0, self.y0, self.w, self.h)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:

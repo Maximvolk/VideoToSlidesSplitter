@@ -1,6 +1,6 @@
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from video_processing import getVideoFrame
+from PyQt5 import QtCore, QtWidgets, uic
+from video_processing import VideoProcessingQThread
 from preview_scene import PreviewScene
 
 
@@ -12,7 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setHandlers()
 
         self.videoPath = None
-        self.outputDirectory = None
+        self.outputDirectory = "."
 
         self.removeVideoButton.setEnabled(False)
         self.startButton.setEnabled(False)
@@ -20,10 +20,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.previewScene = PreviewScene()
         self.preview.setScene(self.previewScene)
 
+    def updateProgress(self, progress):
+        self.progressBar.setValue(progress)
+
+    def finishProcessing(self):
+        self.progressBar.reset()
+        self.removeVideo()
+
+        message = QtWidgets.QMessageBox()
+        message.setWindowTitle("")
+        message.setText("Processing finished!")
+        message.exec_()
+
     def setHandlers(self):
         self.addVideoButton.clicked.connect(self.openAddVideoDialog)
         self.removeVideoButton.clicked.connect(self.removeVideo)
         self.chooseOutputDirectoryButton.clicked.connect(self.openChooseOutputDirectoryDialog)
+        self.startButton.clicked.connect(self.startProcessing)
 
     def openAddVideoDialog(self):
         videoPath = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -45,9 +58,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.removeVideoButton.setEnabled(False)
         self.startButton.setEnabled(False)
         self.addVideoButton.setEnabled(True)
-        
+        self.chooseOutputDirectoryButton.setEnabled(True)
+
         self.videoPath = None
         self.previewScene.clear()
+        self.previewScene.resetSelection()
+        self.processingTask.terminate()
 
     def openChooseOutputDirectoryDialog(self):
         outputDirectory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
@@ -55,8 +71,19 @@ class MainWindow(QtWidgets.QMainWindow):
         if not outputDirectory:
             return
 
-        print(outputDirectory)
         self.outputDirectory = outputDirectory
+
+    def startProcessing(self):
+        self.processingTask = VideoProcessingQThread(self.videoPath, self.previewScene.x0,
+            self.previewScene.y0, self.previewScene.w, self.previewScene.h, self.outputDirectory)
+
+        self.processingTask.start()
+        self.processingTask.progressUpdated.connect(self.updateProgress)
+        self.processingTask.processingFinished.connect(self.finishProcessing)
+
+        self.startButton.setEnabled(False)
+        self.addVideoButton.setEnabled(False)
+        self.chooseOutputDirectoryButton.setEnabled(False)
 
 
 app = QtWidgets.QApplication(sys.argv)

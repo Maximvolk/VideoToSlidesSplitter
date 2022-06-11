@@ -1,9 +1,16 @@
-import cv2
 from pathlib import Path
+import os
+from datetime import datetime
+
+import cv2
 from skimage.metrics import structural_similarity
+from PyQt5 import QtCore
+from PIL import Image
 
 
 PREVIEW_PATH = "./preview.png"
+IMAGE_PREFIX = "__vtss_img__"
+OUTPUT_PREFIX = "Lecture_"
 
 
 def getVideoFrame(filename):
@@ -23,43 +30,97 @@ def getVideoFrame(filename):
     return PREVIEW_PATH
 
 
-def processVideo(videoPath, outputDirectory="/Users/maximvolk/Lecture1"):
-    capture = cv2.VideoCapture(videoPath)
+class VideoProcessingQThread(QtCore.QThread):
 
-    framesRead = 0
-    saveEveryN = 20
-    imageCount = 0
+    progressUpdated = QtCore.pyqtSignal(int)
+    processingFinished = QtCore.pyqtSignal(int)
 
-    previousImageGrayscale = None
-    sameImagesCount = 0
+    def __init__(self, videoPath, x, y, w, h, outputDirectory="."):
+        self.videoPath = videoPath
+        self.x = int(x)
+        self.y = int(y)
+        self.w = int(w)
+        self.h = int(h)
+        self.outputDirectory = outputDirectory
 
-    while True:
-        success, frame = capture.read()
+        super().__init__()
 
-        if not success:
-            break
+    def __del__(self):
+        self.wait()
 
-        if framesRead < saveEveryN:
-            framesRead += 1
-            continue
+    def terminate(self):
+        removeImages(self.outputDirectory)
+        self.progressUpdated.emit(0)
+
+        if not self.isFinished:
+            super().terminate()
+
+    def run(self):
+        capture = cv2.VideoCapture(self.videoPath)
+        framesCount = capture.get(cv2.CAP_PROP_FRAME_COUNT)
 
         framesRead = 0
-        imageGrayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        saveEveryN = 20
+        imageCount = 0
 
-        if previousImageGrayscale is None:
+        previousImageGrayscale = None
+        sameImagesCount = 0
+
+        while True:
+            success, frame = capture.read()
+
+            if not success:
+                break
+
+            if framesRead < saveEveryN:
+                framesRead += 1
+                continue
+
+            framesRead = 0
+            self.progressUpdated.emit(int(capture.get(cv2.CAP_PROP_POS_FRAMES) / framesCount * 100))
+
+            frame = frame[self.y: self.y + self.h, self.x: self.x + self.w]
+            imageGrayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            if previousImageGrayscale is None:
+                previousImageGrayscale = imageGrayscale
+                continue
+
+            if structural_similarity(imageGrayscale, previousImageGrayscale) > 0.98:
+                sameImagesCount += 1
+            else:
+                sameImagesCount = 0
+
             previousImageGrayscale = imageGrayscale
-            continue
 
-        if structural_similarity(imageGrayscale, previousImageGrayscale) > 0.98:
-            sameImagesCount += 1
-        else:
-            sameImagesCount = 0
+            if sameImagesCount == 2:
+                imageCount += 1
+                imagePath = str(Path(self.outputDirectory) / f"{IMAGE_PREFIX}{imageCount}.png")
+                cv2.imwrite(imagePath, frame)
 
-        previousImageGrayscale = imageGrayscale
+        capture.release()
+        createPdfFromImages(self.outputDirectory)
+        removeImages(self.outputDirectory)
+        self.processingFinished.emit(1)
 
-        if sameImagesCount == 2:
-            imageCount += 1
-            imagePath = str(Path(outputDirectory) / f"img_{imageCount}.png")
-            cv2.imwrite(imagePath, frame)
 
-    capture.release()
+def createPdfFromImages(outputDirectory):
+    images = []
+
+    for item in os.listdir(outputDirectory):
+        if IMAGE_PREFIX in item:
+            image = Image.open(str(Path(outputDirectory) / item)).convert('RGB')
+            images.append(image)
+
+    if len(images) == 0:
+        return
+
+    firstImage = images[0]
+    outputFile = str(Path(outputDirectory) / f"{OUTPUT_PREFIX}{datetime.now().timestamp()}.pdf")
+    firstImage.save(outputFile, save_all=True, append_images=images[1:])
+
+
+def removeImages(outputDirectory):
+    for item in os.listdir(outputDirectory):
+        if IMAGE_PREFIX in item:
+            os.remove(str(Path(outputDirectory) / item))
