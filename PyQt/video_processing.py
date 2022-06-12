@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-from datetime import datetime
+from stat import ST_CTIME
 
 import cv2
 from skimage.metrics import structural_similarity
@@ -99,25 +99,35 @@ class VideoProcessingQThread(QtCore.QThread):
                 cv2.imwrite(imagePath, frame)
 
         capture.release()
-        createPdfFromImages(self.outputDirectory)
+        createPdfFromImages(self.outputDirectory, self.videoPath)
         removeImages(self.outputDirectory)
         self.processingFinished.emit(1)
 
 
-def createPdfFromImages(outputDirectory):
+def createPdfFromImages(outputDirectory, videoPath):
+    videoPath = videoPath.replace("\\", "/")
+    fileName = os.path.basename(videoPath).split('.')[0]
     images = []
 
-    for item in os.listdir(outputDirectory):
-        if IMAGE_PREFIX in item:
-            image = Image.open(str(Path(outputDirectory) / item)).convert('RGB')
-            images.append(image)
+    for item in _getImagesForPdf(outputDirectory):
+        image = Image.open(str(Path(outputDirectory) / item)).convert('RGB')
+        images.append(image)
 
     if len(images) == 0:
         return
 
     firstImage = images[0]
-    outputFile = str(Path(outputDirectory) / f"{OUTPUT_PREFIX}{datetime.now().timestamp()}.pdf")
+    outputFile = str(Path(outputDirectory) / f"{fileName}.pdf")
     firstImage.save(outputFile, save_all=True, append_images=images[1:])
+
+
+def _getImagesForPdf(outputDirectory):
+    # retrieve suitable files (with prefix) and sort by creation time
+    files = [os.path.join(outputDirectory, item) for item in os.listdir(outputDirectory)]
+    files = [(os.stat(item)[ST_CTIME], item) for item in files]
+    files.sort()
+    
+    return [item[1] for item in files if IMAGE_PREFIX in item[1]]
 
 
 def removeImages(outputDirectory):
