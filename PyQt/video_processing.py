@@ -43,17 +43,17 @@ class VideoProcessingQThread(QtCore.QThread):
         self.h = int(h)
         self.outputDirectory = outputDirectory
 
+        self._active = True
         super().__init__()
 
     def __del__(self):
         self.wait()
 
-    def terminate(self):
-        removeImages(self.outputDirectory)
+    def stop(self):
+        self._active = False
+        self.quit()
+        self.wait()
         self.progressUpdated.emit(0)
-
-        if not self.isFinished:
-            super().terminate()
 
     def run(self):
         capture = cv2.VideoCapture(self.videoPath)
@@ -66,7 +66,7 @@ class VideoProcessingQThread(QtCore.QThread):
         previousImageGrayscale = None
         sameImagesCount = 0
 
-        while True:
+        while self._active:
             success, frame = capture.read()
 
             if not success:
@@ -86,7 +86,7 @@ class VideoProcessingQThread(QtCore.QThread):
                 previousImageGrayscale = imageGrayscale
                 continue
 
-            if structural_similarity(imageGrayscale, previousImageGrayscale) > 0.98:
+            if structural_similarity(imageGrayscale, previousImageGrayscale) > 0.85:
                 sameImagesCount += 1
             else:
                 sameImagesCount = 0
@@ -99,9 +99,14 @@ class VideoProcessingQThread(QtCore.QThread):
                 cv2.imwrite(imagePath, frame)
 
         capture.release()
-        createPdfFromImages(self.outputDirectory, self.videoPath)
+
+        if self._active:
+            createPdfFromImages(self.outputDirectory, self.videoPath)
+
         removeImages(self.outputDirectory)
-        self.processingFinished.emit(1)
+
+        if self._active:
+            self.processingFinished.emit(1)
 
 
 def createPdfFromImages(outputDirectory, videoPath):

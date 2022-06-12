@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.videoPath = None
         self.previewScene.clear()
         self.previewScene.resetSelection()
-        self.processingTask.terminate()
+        self.processingTask.stop()
 
     def openChooseOutputDirectoryDialog(self):
         outputDirectory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
