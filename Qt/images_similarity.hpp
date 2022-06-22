@@ -3,5 +3,8 @@
 #include <opencv2/core.hpp>
 
 
-double structural_similarity(cv::Mat firstImage, cv::Mat secondImage);
+namespace ImageComparison
+{
+double structural_similarity(cv::Mat& firstImage, cv::Mat& secondImage);
+}
 #endif // IMAGES_SIMILARITY_HPP

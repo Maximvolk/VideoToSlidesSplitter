@@ -28,9 +28,6 @@ void PreviewScene::createPreviewFromVideo(QString videoPath)
 
 void PreviewScene::resetSelection()
 {
-    if (selectionRect)
-        delete selectionRect;
-
     setX0(0);
     setY0(0);
     setW(maxWidth);

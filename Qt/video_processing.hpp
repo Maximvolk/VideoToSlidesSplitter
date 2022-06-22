@@ -14,9 +14,8 @@ public:
 
     void stop();
     void run();
+    std::vector<QString> getVideoImages() { return videoImages; };
 
-    static void createPdfFromImages(QString outputDirectory, QString videoPath);
-    static void removeImages(QString outputDirectory);
     static QString getVideoFrame(const QString& filename);
 
 signals:
@@ -30,12 +29,12 @@ private:
     int w;
     int h;
     QString outputDirectory;
+
     bool active = true;
+    std::vector<QString> videoImages;
 
     static const QString PREVIEW_PATH;
     static const QString IMAGE_PREFIX;
-
-    static std::vector<QString> getImagesForPdf(QString outputDirectory);
 };
 
 #endif // VIDEOPROCESSING_HPP

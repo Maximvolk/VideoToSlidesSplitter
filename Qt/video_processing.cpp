@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/video.hpp>
 #include <QDir>
-#include "hpdf.h"
+#include <pdf.hpp>
 #include "video_processing.hpp"
 #include "images_similarity.hpp"
 
@@ -9,7 +9,7 @@
 VideoProcessingQThread::VideoProcessingQThread(
         QString videoPath, int x, int y, int w, int h, QString outputDirectory) :
         QThread::QThread(),
-        x(x), y(y), w(w), h(h), outputDirectory(outputDirectory){}
+        videoPath(videoPath), x(x), y(y), w(w), h(h), outputDirectory(outputDirectory){}
 
 VideoProcessingQThread::~VideoProcessingQThread() { this->wait(); }
 
@@ -38,6 +38,7 @@ void VideoProcessingQThread::run()
 
     int sameImagesCount = 0;
     cv::Mat frame;
+    videoImages = std::vector<QString>();
 
     while (active)
     {
@@ -47,6 +48,7 @@ void VideoProcessingQThread::run()
         if (frame.empty())
             break;
 
+        // Capture every Nth frame
         if (framesRead < saveEveryN)
         {
             framesRead++;
@@ -56,8 +58,12 @@ void VideoProcessingQThread::run()
         framesRead = 0;
         emit progressUpdated(int(capture.get(cv::CAP_PROP_POS_FRAMES) / framesCount * 100));
 
+        // Crop according with chosen by user selection rect
+        // and compare to previous
+        // When more than two images in a row are almost same save image
         frame = frame(cv::Rect(x, y, w, h));
-        cv::cvtColor(frame, imageGrayscale, cv::COLOR_BGR2GRAY);
+        imageGrayscale = frame;
+//        cv::cvtColor(frame, imageGrayscale, cv::COLOR_BGR2GRAY);
 
         if (previousImageGrayscale.empty())
         {
@@ -65,7 +71,7 @@ void VideoProcessingQThread::run()
             continue;
         }
 
-        if (structural_similarity(imageGrayscale, previousImageGrayscale) > 0.85)
+        if (ImageComparison::structural_similarity(imageGrayscale, previousImageGrayscale) > 0.85)
             sameImagesCount++;
         else
             sameImagesCount = 0;
@@ -75,32 +81,25 @@ void VideoProcessingQThread::run()
         if (sameImagesCount == 2)
         {
             imageCount++;
-
             QString filename = QString("%1%2.png").arg(IMAGE_PREFIX, QString::number(imageCount));
             QString imagePath = QDir(outputDirectory).filePath(filename);
+
             cv::imwrite(imagePath.toStdString(), frame);
+            videoImages.push_back(imagePath);
         }
     }
 
     capture.release();
 
+    // Transform bunch of images to PDF and remove images afterwards
     if (active)
-        createPdfFromImages(outputDirectory, videoPath);
+        Pdf::createPdfFromImages(videoImages, outputDirectory, videoPath, w, h);
 
-    removeImages(outputDirectory);
+    for (const QString& image: videoImages)
+        std::remove(image.toStdString().c_str());
 
     if (active)
         emit processingFinished(1);
-}
-
-void VideoProcessingQThread::createPdfFromImages(QString outputDirectory, QString videoPath)
-{
-
-}
-
-void VideoProcessingQThread::removeImages(QString outputDirectory)
-{
-
 }
 
 QString VideoProcessingQThread::getVideoFrame(const QString& filename)
@@ -122,9 +121,4 @@ QString VideoProcessingQThread::getVideoFrame(const QString& filename)
     capture.release();
 
     return PREVIEW_PATH;
-}
-
-std::vector<QString> VideoProcessingQThread::getImagesForPdf(QString outputDirectory)
-{
-    return { "" };
 }
