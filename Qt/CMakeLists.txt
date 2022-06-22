@@ -12,12 +12,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(OpenCV_DIR /Users/maximvolk/Source/libs/build_opencv)
+set(hpdflib_DIR /Users/maximvolk/Source/libs/build_libharu)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+
+find_package(libhpdf REQUIRED)
+include_directories(/Users/maximvolk/Source/libs/build_libharu/include)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -28,6 +32,8 @@ set(PROJECT_SOURCES
         preview_scene.hpp
         video_processing.cpp
         video_processing.hpp
+        images_similarity.hpp
+        images_similarity.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
