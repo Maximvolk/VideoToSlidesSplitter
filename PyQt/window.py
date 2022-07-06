@@ -13,6 +13,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.videoPath = None
         self.outputDirectory = "."
+        self.processingTask = None
 
         self.removeVideoButton.setEnabled(False)
         self.startButton.setEnabled(False)
@@ -63,7 +64,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.videoPath = None
         self.previewScene.clear()
         self.previewScene.resetSelection()
-        self.processingTask.stop()
+
+        if self.processingTask:
+            self.processingTask.stop()
 
     def openChooseOutputDirectoryDialog(self):
         outputDirectory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
