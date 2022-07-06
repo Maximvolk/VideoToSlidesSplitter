@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from video_processing import getVideoFrame
+from video_processing import getNthVideoFrame
 
 
 class PreviewScene(QtWidgets.QGraphicsScene):
@@ -7,17 +7,20 @@ class PreviewScene(QtWidgets.QGraphicsScene):
     def __init__(self):
         super().__init__()
 
+        self.videoFramesCount = 0
         self.mouseLeftButtonPressed = False
         self.mouseStartPosition = None
-        # self.selectionRect = None
 
         self.maxWidth = int(self.width())
         self.maxHeight = int(self.height())
         self.resetSelection()
 
     def createPreviewFromVideo(self, videoPath):
-        previewPath = getVideoFrame(videoPath)
-        self.addPixmap(QtGui.QPixmap(previewPath))
+        currentFrame = getNthVideoFrame(videoPath, 100)
+        height, width, _ = currentFrame.shape
+
+        self.currentImage = QtGui.QImage(currentFrame.data, width, height, width*3, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
+        self.addPixmap(QtGui.QPixmap(self.currentImage))
 
         self.maxWidth = int(self.width())
         self.maxHeight = int(self.height())

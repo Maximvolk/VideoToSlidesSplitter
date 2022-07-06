@@ -1,6 +1,7 @@
 import sys
-from PyQt5 import QtCore, QtWidgets, uic
-from video_processing import VideoProcessingQThread
+from PyQt5 import QtCore, QtWidgets, QtGui, uic
+from preview_tape import PreviewTape
+from video_processing import VideoProcessingQThread, getVideoFramesCount
 from preview_scene import PreviewScene
 
 
@@ -11,6 +12,12 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi("window.ui", self)
         self.setHandlers()
 
+        self.previewTape = PreviewTape(self, 260, 370, 511)
+        self.previewTape.setParent(self)
+        self.previewTape.setGeometry(260, 370, 511, 21)
+        self.previewTape.hide()
+
+        self.loaderPath = "loader.gif"
         self.videoPath = None
         self.outputDirectory = "."
         self.processingTask = None
@@ -52,6 +59,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.startButton.setEnabled(True)
 
         self.previewScene.createPreviewFromVideo(videoPath[0])
+        self.previewTape.setFrameSize(self.previewScene.maxWidth, self.previewScene.maxHeight)
+
+        # self.addLoader()
+        self.previewTape.preparePreview(videoPath[0])
+        # self.removeLoader()
+
+        self.previewTape.show()
         self.preview.fitInView(self.previewScene.itemsBoundingRect(),
             QtCore.Qt.AspectRatioMode.KeepAspectRatio)
     
@@ -61,6 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addVideoButton.setEnabled(True)
         self.chooseOutputDirectoryButton.setEnabled(True)
 
+        self.previewTape.hide()
         self.videoPath = None
         self.previewScene.clear()
         self.previewScene.resetSelection()
@@ -87,6 +102,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.startButton.setEnabled(False)
         self.addVideoButton.setEnabled(False)
         self.chooseOutputDirectoryButton.setEnabled(False)
+
+    def addLoader(self):
+        loadingDialog = QtWidgets.QDialog()
+        loadingDialog.setWindowTitle("");
+        loadingDialog.setWindowFlag(QtCore.Qt.WindowType.WindowCloseButtonHint, False)
+
+        loadingLabel = QtWidgets.QLabel()
+        loadingMovie = QtGui.QMovie(self.loaderPath)
+
+        loadingLabel.setMovie(loadingMovie)
+        loadingMovie.start()
+        loadingDialog.exec_()
+
+    def removeLoader(self):
+        self.loaderLabe.hide()
 
 
 app = QtWidgets.QApplication(sys.argv)

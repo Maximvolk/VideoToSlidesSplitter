@@ -13,21 +13,45 @@ IMAGE_PREFIX = "__vtss_img__"
 OUTPUT_PREFIX = "Lecture_"
 
 
-def getVideoFrame(filename):
+def getNthVideoFrame(filename, n):
     capture = cv2.VideoCapture(filename)
-    framesRead = 0
+    capture.set(cv2.CAP_PROP_POS_FRAMES, n)
 
-    while framesRead < 100:
-        success, frame = capture.read()
-        framesRead += 1
+    success, frame = capture.read()
+    if not success:
+        raise Exception("Failed to read video frame") 
 
-        if not success:
-            raise Exception("Failed to read video frame") 
-
-    cv2.imwrite(PREVIEW_PATH, frame)
     capture.release()
+    return frame
 
-    return PREVIEW_PATH
+
+def getVideoFramesCount(filename):
+    capture = cv2.VideoCapture(filename)
+    framesCount = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    capture.release()
+    return framesCount
+
+
+def preparePreviewFrames(videoPath, saveEveryN):
+    frames = []
+    capture = cv2.VideoCapture(videoPath)
+    currentIndex = 0
+
+    while True:
+        success, frame = capture.read()
+        if not success:
+            break
+
+        frames.append(frame)
+
+        # extract one to include last frame
+        currentIndex += saveEveryN - 1
+        capture.set(cv2.CAP_PROP_POS_FRAMES, currentIndex)
+        print('frame ready')
+
+    capture.release()
+    return frames
 
 
 class VideoProcessingQThread(QtCore.QThread):

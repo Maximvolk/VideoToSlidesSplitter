@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>802</width>
     <height>598</height>
    </rect>
   </property>
@@ -31,9 +31,9 @@
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>470</y>
+      <y>480</y>
       <width>211</width>
-      <height>71</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -63,9 +63,9 @@ QPushButton:pressed {
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>470</y>
+      <y>480</y>
       <width>211</width>
-      <height>71</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -98,7 +98,7 @@ QPushButton:pressed {
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>30</y>
+      <y>20</y>
       <width>181</width>
       <height>131</height>
      </rect>
@@ -129,7 +129,7 @@ QPushButton:pressed {
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>180</y>
+      <y>170</y>
       <width>181</width>
       <height>51</height>
      </rect>
@@ -176,9 +176,9 @@ QPushButton:pressed {
     <property name="geometry">
      <rect>
       <x>220</x>
-      <y>30</y>
+      <y>20</y>
       <width>20</width>
-      <height>511</height>
+      <height>521</height>
      </rect>
     </property>
     <property name="orientation">
@@ -188,8 +188,8 @@ QPushButton:pressed {
    <widget class="Line" name="line_2">
     <property name="geometry">
      <rect>
-      <x>257</x>
-      <y>440</y>
+      <x>260</x>
+      <y>450</y>
       <width>511</width>
       <height>20</height>
      </rect>
@@ -201,31 +201,25 @@ QPushButton:pressed {
    <widget class="QGraphicsView" name="preview">
     <property name="geometry">
      <rect>
-      <x>255</x>
-      <y>31</y>
-      <width>521</width>
-      <height>351</height>
+      <x>250</x>
+      <y>20</y>
+      <width>531</width>
+      <height>341</height>
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
+   <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>259</x>
-      <y>400</y>
-      <width>511</width>
-      <height>31</height>
+      <x>260</x>
+      <y>420</y>
+      <width>509</width>
+      <height>21</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QProgressBar" name="progressBar">
-       <property name="value">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <property name="value">
+     <number>0</number>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -233,8 +227,8 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>24</height>
+     <width>802</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
