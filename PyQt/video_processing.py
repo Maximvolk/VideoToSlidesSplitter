@@ -34,6 +34,7 @@ def getVideoFramesCount(filename):
 
 def preparePreviewFrames(videoPath, saveEveryN):
     frames = []
+    tapeFrame = None
     capture = cv2.VideoCapture(videoPath)
     currentIndex = 0
 
@@ -49,7 +50,7 @@ def preparePreviewFrames(videoPath, saveEveryN):
         capture.set(cv2.CAP_PROP_POS_FRAMES, currentIndex)
 
     capture.release()
-    return frames
+    return frames, tapeFrame
 
 
 class VideoProcessingQThread(QtCore.QThread):

@@ -30,6 +30,12 @@ class PreviewTape(QtWidgets.QLabel):
         self.frameWidth = videoWidth * self.previewFrameSizeCoef
         self.frameHeight = videoHeight * self.previewFrameSizeCoef
 
+    def setBackground(self, frame):
+        height, width, _ = frame.shape
+        image = QtGui.QImage(frame.data, width, height, width*3, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
+        self.setPixmap(QtGui.QPixmap(image))
+        self.setScaledContents(True)
+
     def enterEvent(self, event):
         if not self.frameWidth:
             return
@@ -105,6 +111,7 @@ class PreviewPreparationQThread(QtCore.QThread):
     def run(self):
         # we take every k-th frame of video and show it on certain tape part (amountOfTapePxForSingleFrame)
         everyNth = int(getVideoFramesCount(self.videoPath) / (self.previewTape.width / self.previewTape.amountOfTapePxForSingleFrame))
-        self.previewTape.previewFrames = preparePreviewFrames(self.videoPath, everyNth)
+        self.previewTape.previewFrames, tapeFrame = preparePreviewFrames(self.videoPath, everyNth)
 
+        self.previewTape.setBackground(tapeFrame)
         self.processingFinished.emit(1)
