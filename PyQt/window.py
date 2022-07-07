@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
-from preview_tape import PreviewTape
-from video_processing import VideoProcessingQThread, getVideoFramesCount
+from preview_tape import PreviewTape, PreviewPreparationQThread
+from video_processing import VideoProcessingQThread
 from preview_scene import PreviewScene
 
 
@@ -16,6 +16,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.previewTape.setParent(self)
         self.previewTape.setGeometry(260, 370, 511, 21)
         self.previewTape.hide()
+        self.previewTape.previewChanged.connect(self.changePreviewFrame)
 
         self.loaderPath = "loader.gif"
         self.videoPath = None
@@ -40,6 +41,10 @@ class MainWindow(QtWidgets.QMainWindow):
         message.setText("Processing finished!")
         message.exec_()
 
+    def changePreviewFrame(self):
+        frame = self.previewTape.getCurrentFrame()
+        self.previewScene.setPreview(frame)
+
     def setHandlers(self):
         self.addVideoButton.clicked.connect(self.openAddVideoDialog)
         self.removeVideoButton.clicked.connect(self.removeVideo)
@@ -54,16 +59,31 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         
         self.videoPath = videoPath[0]
+        self.addLoader()
+
+        self.previewPreparationTask = PreviewPreparationQThread(self.previewTape, videoPath[0])
+        self.previewPreparationTask.start()
+        self.previewPreparationTask.processingFinished.connect(self.finishPreviewPreparation)
+
+    def addLoader(self):
+        self.preview.hide()
+
+        loadingMovie = QtGui.QMovie("loading.gif")
+        self.loaderLabel.setMovie(loadingMovie)
+        self.loaderLabel.setScaledContents(True)
+
+        loadingMovie.start()
+        self.loaderLabel.show()
+
+    def finishPreviewPreparation(self):
         self.addVideoButton.setEnabled(False)
         self.removeVideoButton.setEnabled(True)
         self.startButton.setEnabled(True)
-
-        self.previewScene.createPreviewFromVideo(videoPath[0])
+        
+        self.loaderLabel.hide()
+        self.preview.show()
+        self.previewScene.createPreviewFromVideo(self.videoPath)
         self.previewTape.setFrameSize(self.previewScene.maxWidth, self.previewScene.maxHeight)
-
-        # self.addLoader()
-        self.previewTape.preparePreview(videoPath[0])
-        # self.removeLoader()
 
         self.previewTape.show()
         self.preview.fitInView(self.previewScene.itemsBoundingRect(),
@@ -78,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.previewTape.hide()
         self.videoPath = None
         self.previewScene.clear()
-        self.previewScene.resetSelection()
+        self.previewScene.resetSelection()    
 
         if self.processingTask:
             self.processingTask.stop()
@@ -102,21 +122,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.startButton.setEnabled(False)
         self.addVideoButton.setEnabled(False)
         self.chooseOutputDirectoryButton.setEnabled(False)
-
-    def addLoader(self):
-        loadingDialog = QtWidgets.QDialog()
-        loadingDialog.setWindowTitle("");
-        loadingDialog.setWindowFlag(QtCore.Qt.WindowType.WindowCloseButtonHint, False)
-
-        loadingLabel = QtWidgets.QLabel()
-        loadingMovie = QtGui.QMovie(self.loaderPath)
-
-        loadingLabel.setMovie(loadingMovie)
-        loadingMovie.start()
-        loadingDialog.exec_()
-
-    def removeLoader(self):
-        self.loaderLabe.hide()
 
 
 app = QtWidgets.QApplication(sys.argv)

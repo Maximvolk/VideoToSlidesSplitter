@@ -1,8 +1,10 @@
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from video_processing import getVideoFramesCount, preparePreviewFrames
 
 
 class PreviewTape(QtWidgets.QLabel):
+
+    previewChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, parent, x, y, width):
         super().__init__()
@@ -27,11 +29,6 @@ class PreviewTape(QtWidgets.QLabel):
     def setFrameSize(self, videoWidth, videoHeight):
         self.frameWidth = videoWidth * self.previewFrameSizeCoef
         self.frameHeight = videoHeight * self.previewFrameSizeCoef
-
-    def preparePreview(self, videoPath):
-        # we take every k-th frame of video and show it on certain tape part (amountOfTapePxForSignelFrame)
-        everyNth = int(getVideoFramesCount(videoPath) / (self.width / self.amountOfTapePxForSingleFrame))
-        self.previewFrames = preparePreviewFrames(videoPath, everyNth)
 
     def enterEvent(self, event):
         if not self.frameWidth:
@@ -72,7 +69,10 @@ class PreviewTape(QtWidgets.QLabel):
         self._setNthPreviewFrame(n)
 
     def mousePressEvent(self, event):
-        frame = self.previewFrames[self.currentFrameIndex]
+        self.previewChanged.emit(1)
+
+    def getCurrentFrame(self):
+        return self.previewFrames[self.currentFrameIndex]
 
     def _getPreviewFrameCoordinates(self, eventX):
         previewFrameX = self.x + eventX - self.frameWidth / 2
@@ -90,3 +90,21 @@ class PreviewTape(QtWidgets.QLabel):
         image = QtGui.QImage(frame.data, width, height, width*3, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
         self.previewFrame.setPixmap(QtGui.QPixmap(image))
         self.previewFrame.setScaledContents(True)
+
+
+class PreviewPreparationQThread(QtCore.QThread):
+
+    processingFinished = QtCore.pyqtSignal(int)
+
+    def __init__(self, previewTape, videoPath):
+        self.previewTape = previewTape
+        self.videoPath = videoPath
+
+        super().__init__()
+
+    def run(self):
+        # we take every k-th frame of video and show it on certain tape part (amountOfTapePxForSingleFrame)
+        everyNth = int(getVideoFramesCount(self.videoPath) / (self.previewTape.width / self.previewTape.amountOfTapePxForSingleFrame))
+        self.previewTape.previewFrames = preparePreviewFrames(self.videoPath, everyNth)
+
+        self.processingFinished.emit(1)

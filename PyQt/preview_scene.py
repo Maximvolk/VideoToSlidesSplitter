@@ -7,6 +7,7 @@ class PreviewScene(QtWidgets.QGraphicsScene):
     def __init__(self):
         super().__init__()
 
+        self.currentImage = None
         self.videoFramesCount = 0
         self.mouseLeftButtonPressed = False
         self.mouseStartPosition = None
@@ -17,14 +18,26 @@ class PreviewScene(QtWidgets.QGraphicsScene):
 
     def createPreviewFromVideo(self, videoPath):
         currentFrame = getNthVideoFrame(videoPath, 100)
-        height, width, _ = currentFrame.shape
+        self.setPreview(currentFrame)
 
-        self.currentImage = QtGui.QImage(currentFrame.data, width, height, width*3, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
-        self.addPixmap(QtGui.QPixmap(self.currentImage))
+    def setPreview(self, frame):
+        if self.currentImage:
+            self.removeItem(self.currentImage)
+
+        height, width, _ = frame.shape
+        image = QtGui.QImage(frame.data, width, height, width*3, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
+        self.currentImage = self.addPixmap(QtGui.QPixmap(image))
 
         self.maxWidth = int(self.width())
         self.maxHeight = int(self.height())
         self.resetSelection()
+
+    def clear(self):
+        if self.currentImage:
+            self.removeItem(self.currentImage)
+            self.currentImage = None
+            
+        super().clear()
 
     @property
     def x0(self):

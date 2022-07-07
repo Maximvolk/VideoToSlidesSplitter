@@ -8,7 +8,6 @@ from PyQt5 import QtCore
 from PIL import Image
 
 
-PREVIEW_PATH = "./preview.png"
 IMAGE_PREFIX = "__vtss_img__"
 OUTPUT_PREFIX = "Lecture_"
 
@@ -48,7 +47,6 @@ def preparePreviewFrames(videoPath, saveEveryN):
         # extract one to include last frame
         currentIndex += saveEveryN - 1
         capture.set(cv2.CAP_PROP_POS_FRAMES, currentIndex)
-        print('frame ready')
 
     capture.release()
     return frames
