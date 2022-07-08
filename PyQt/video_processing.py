@@ -32,11 +32,16 @@ def getVideoFramesCount(filename):
     return framesCount
 
 
-def preparePreviewFrames(videoPath, saveEveryN):
+def preparePreviewFrames(videoPath, saveEveryN, tapeBackgroundFramesCount):
     frames = []
-    tapeFrame = None
+    tapeFrames = []
+
     capture = cv2.VideoCapture(videoPath)
     currentIndex = 0
+
+    previewFramesCount = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) / saveEveryN)
+    appendToTapeEveryNSaved = int(previewFramesCount / tapeBackgroundFramesCount)
+    savedCount = 0
 
     while True:
         success, frame = capture.read()
@@ -49,8 +54,13 @@ def preparePreviewFrames(videoPath, saveEveryN):
         currentIndex += saveEveryN - 1
         capture.set(cv2.CAP_PROP_POS_FRAMES, currentIndex)
 
+        savedCount += 1
+        if savedCount == appendToTapeEveryNSaved:
+            tapeFrames.append(frame)
+            savedCount = 0
+
     capture.release()
-    return frames, tapeFrame
+    return frames, cv2.hconcat(tapeFrames)
 
 
 class VideoProcessingQThread(QtCore.QThread):

@@ -6,6 +6,8 @@ class PreviewTape(QtWidgets.QLabel):
 
     previewChanged = QtCore.pyqtSignal(int)
 
+    TAPE_BACKGROUND_FRAMES_COUNT = 15
+
     def __init__(self, parent, x, y, width):
         super().__init__()
         self.previewFrameSizeCoef = 0.15
@@ -111,7 +113,7 @@ class PreviewPreparationQThread(QtCore.QThread):
     def run(self):
         # we take every k-th frame of video and show it on certain tape part (amountOfTapePxForSingleFrame)
         everyNth = int(getVideoFramesCount(self.videoPath) / (self.previewTape.width / self.previewTape.amountOfTapePxForSingleFrame))
-        self.previewTape.previewFrames, tapeFrame = preparePreviewFrames(self.videoPath, everyNth)
+        self.previewTape.previewFrames, tapeFrame = preparePreviewFrames(self.videoPath, everyNth, self.previewTape.TAPE_BACKGROUND_FRAMES_COUNT)
 
         self.previewTape.setBackground(tapeFrame)
         self.processingFinished.emit(1)
